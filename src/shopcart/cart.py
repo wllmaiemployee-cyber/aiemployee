@@ -9,12 +9,15 @@ class Cart:
         self.items = {}  # sku -> {"price": Decimal, "qty": int}
 
     def add_item(self, sku, price, qty=1):
-        if qty < 0:
+        if qty <= 0:
             raise ValueError("quantity must be positive")
-        self.items[sku] = {"price": Decimal(str(price)), "qty": qty}
+        if sku in self.items:
+            self.items[sku]["qty"] += qty
+        else:
+            self.items[sku] = {"price": Decimal(str(price)), "qty": qty}
 
     def remove_item(self, sku):
-        self.items.pop(sku, None)
+        self.items.pop(sku)
 
     def subtotal(self):
         total = sum((i["price"] * i["qty"] for i in self.items.values()), Decimal("0"))
@@ -22,4 +25,4 @@ class Cart:
 
     def total(self):
         sub = self.subtotal()
-        return round(float(sub * (1 + GST_RATE)), 2)
+        return (sub * (1 + GST_RATE)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)

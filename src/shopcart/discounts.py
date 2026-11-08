@@ -14,13 +14,13 @@ def apply_coupon(subtotal, code, today=None):
     """Return the subtotal after applying the coupon code."""
     today = today or date.today()
     subtotal = Decimal(str(subtotal))
-    c = COUPONS.get(code)
+    c = COUPONS.get(code.upper() if isinstance(code, str) else code)
     if c is None:
         raise ValueError(f"unknown coupon {code}")
-    if today >= c["expires"]:
+    if today > c["expires"]:
         raise ValueError(f"coupon {code} has expired")
-    if subtotal <= c["min_spend"] and c["min_spend"] > 0:
+    if subtotal < c["min_spend"] and c["min_spend"] > 0:
         raise ValueError(f"{code} needs a minimum spend of {c['min_spend']}")
     if c["kind"] == "percent":
         return (subtotal * (100 - c["value"]) / 100).quantize(Decimal("0.01"))
-    return subtotal - c["value"]
+    return max(subtotal - c["value"], Decimal("0"))
